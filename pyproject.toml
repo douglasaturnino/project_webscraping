@@ -7,6 +7,8 @@ requires-python = ">=3.12"
 dependencies = [
     "beautifulsoup4>=4.12.3",
     "pandas>=2.2.3",
+    "python-dotenv>=1.0.1",
+    "python-telegram-bot>=21.7",
     "requests>=2.32.3",
 ]
 
@@ -55,3 +57,6 @@ quote-style = "double"
 
 [tool.ruff.lint]
 fixable = ["I"]
+
+[tool.ruff.lint.isort]
+combine-as-imports = true

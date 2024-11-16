@@ -1,9 +1,19 @@
+import asyncio
+import os
 import sqlite3
 import time
 
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup
+from dotenv import load_dotenv
+from telegram import Bot
+
+load_dotenv()
+
+TOKEN = os.getenv("TELEGRAM_TOKEN")
+CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
+bot = Bot(token=TOKEN)
 
 
 def fetch_page():
@@ -65,29 +75,42 @@ def get_max_price(conn):
     return None, None
 
 
-if __name__ == "__main__":
+async def send_telegram_message(text):
+    await bot.send_message(chat_id=CHAT_ID, text=text)
+
+
+async def main():
     conn = create_connection()
     setup_database(conn)
 
-    while True:
-        page_content = fetch_page()
-        product_info = parse_page(page_content)
-        current_price = product_info["new_price"]
+    try:
+        while True:
+            page_content = fetch_page()
+            product_info = parse_page(page_content)
+            current_price = product_info["new_price"]
 
-        max_price, max_price_timestamp = get_max_price(conn)
+            max_price, max_price_timestamp = get_max_price(conn)
 
-        if max_price is None or current_price > max_price:
-            print(f"Preço maior detectado: {current_price}")
-            max_price = current_price
-            max_price_timestamp = product_info["timestamp"]
-        else:
-            print(
-                f"O maior preço registrado é {max_price} em {max_price_timestamp}"
-            )
+            if max_price is None or current_price > max_price:
+                message = f"Novo preço maior detectado: {current_price}"
+                print(message)
+                await send_telegram_message(message)
+                max_price = current_price
+                max_price_timestamp = product_info["timestamp"]
+            else:
+                message = f"O maior preço registrado é {max_price} em {max_price_timestamp}"
+                print(message)
+                await send_telegram_message(message)
 
-        save_to_database(conn, product_info)
-        print("Dados salvos no banco:", product_info)
+            save_to_database(conn, product_info)
+            print("Dados salvos no banco:", product_info)
 
-        time.sleep(10)
+            await asyncio.sleep(10)
 
-    conn.close()
+    except KeyboardInterrupt:
+        print("Parando a execução...")
+    finally:
+        conn.close()
+
+
+asyncio.run(main())
