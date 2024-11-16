@@ -1,3 +1,4 @@
+import sqlite3
 import time
 
 import pandas as pd
@@ -30,19 +31,40 @@ def parse_page(html):
     }
 
 
-def save_to_dataframe(product_info, df):
-    new_row = pd.DataFrame([product_info])
-    df = pd.concat([df, new_row], ignore_index=True)
-    return df
+def create_connection(db_name="prices.db"):
+    conn = sqlite3.connect(db_name)
+    return conn
+
+
+def setup_database(conn):
+    cursor = conn.cursor()
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS prices (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            product_name TEXT,
+            old_price INTEGER,
+            new_price INTEGER,
+            installment_price INTEGER,
+            timestamp TEXT
+        )
+    """)
+    conn.commit()
+
+
+def save_to_database(conn, data):
+    df = pd.DataFrame([data])
+    df.to_sql("prices", conn, if_exists="append", index=False)
 
 
 if __name__ == "__main__":
-    df = pd.DataFrame()
+    conn = create_connection()
+    setup_database(conn)
+
     while True:
         page_content = fetch_page()
         product_info = parse_page(page_content)
 
-        df = save_to_dataframe(product_info, df)
-        print(df)
+        save_to_database(conn, product_info)
+        print("Dados salvos no banco:", product_info)
 
         time.sleep(10)
