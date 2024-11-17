@@ -1,16 +1,12 @@
 import asyncio
 import time
 
-import pandas as pd
-import psycopg2
 import requests
 from bs4 import BeautifulSoup
-from sqlalchemy import create_engine
 
 from config import Config as config
+from database import Database
 from telegram_bot import TelegramBot
-
-engine = create_engine(config.DATABASE_URL)
 
 
 def fetch_page():
@@ -38,56 +34,12 @@ def parse_page(html):
     }
 
 
-def create_connection():
-    conn = psycopg2.connect(
-        dbname=config.POSTGRES_DB,
-        user=config.POSTGRES_USER,
-        password=config.POSTGRES_PASSWORD,
-        host=config.POSTGRES_HOST,
-        port=config.POSTGRES_PORT,
-    )
-    return conn
-
-
-def setup_database(conn):
-    cursor = conn.cursor()
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS prices (
-            id SERIAL PRIMARY KEY,
-            product_name TEXT,
-            old_price INTEGER,
-            new_price INTEGER,
-            installment_price INTEGER,
-            timestamp TIMESTAMP
-        )
-    """)
-    conn.commit()
-    cursor.close()
-
-
-def save_to_database(data, table_name="prices"):
-    df = pd.DataFrame([data])
-    df.to_sql(table_name, engine, if_exists="append", index=False)
-
-
-def get_max_price(conn):
-    cursor = conn.cursor()
-    cursor.execute("""
-        SELECT new_price, timestamp 
-        FROM prices 
-        WHERE new_price = (SELECT MAX(new_price) FROM prices);
-    """)
-    result = cursor.fetchone()
-    cursor.close()
-    if result and result[0] is not None:
-        return result[0], result[1]
-    return None, None
-
-
 async def main():
     bot = TelegramBot(config.TOKEN, config.CHAT_ID)
-    conn = create_connection()
-    setup_database(conn)
+    database = Database(config.DATABASE_URL)
+
+    conn = database.create_connection()
+    database.setup(conn)
 
     try:
         while True:
@@ -95,7 +47,7 @@ async def main():
             product_info = parse_page(page_content)
             current_price = product_info["new_price"]
 
-            max_price, max_price_timestamp = get_max_price(conn)
+            max_price, max_price_timestamp = database.get_max_price(conn)
 
             if max_price is None or current_price > max_price:
                 message = f"Novo preço maior detectado: {current_price}"
@@ -108,7 +60,7 @@ async def main():
                 print(message)
                 await bot.send_message(message)
 
-            save_to_database(product_info)
+            database.save(product_info)
             print("Dados salvos no banco:", product_info)
 
             await asyncio.sleep(10)
