@@ -1,29 +1,19 @@
 import asyncio
-import os
 import time
 
 import pandas as pd
 import psycopg2
 import requests
 from bs4 import BeautifulSoup
-from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from telegram import Bot
 
-load_dotenv()
+from config import Config as config
 
-TOKEN = os.getenv("TELEGRAM_TOKEN")
-CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
-bot = Bot(token=TOKEN)
+bot = Bot(token=config.TOKEN)
 
-POSTGRES_DB = os.getenv("POSTGRES_DB")
-POSTGRES_USER = os.getenv("POSTGRES_USER")
-POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
-POSTGRES_HOST = os.getenv("POSTGRES_HOST")
-POSTGRES_PORT = os.getenv("POSTGRES_PORT")
 
-DATABASE_URL = f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}"
-engine = create_engine(DATABASE_URL)
+engine = create_engine(config.DATABASE_URL)
 
 
 def fetch_page():
@@ -53,11 +43,11 @@ def parse_page(html):
 
 def create_connection():
     conn = psycopg2.connect(
-        dbname=POSTGRES_DB,
-        user=POSTGRES_USER,
-        password=POSTGRES_PASSWORD,
-        host=POSTGRES_HOST,
-        port=POSTGRES_PORT,
+        dbname=config.POSTGRES_DB,
+        user=config.POSTGRES_USER,
+        password=config.POSTGRES_PASSWORD,
+        host=config.POSTGRES_HOST,
+        port=config.POSTGRES_PORT,
     )
     return conn
 
@@ -98,7 +88,7 @@ def get_max_price(conn):
 
 
 async def send_telegram_message(text):
-    await bot.send_message(chat_id=CHAT_ID, text=text)
+    await bot.send_message(chat_id=config.CHAT_ID, text=text)
 
 
 async def main():
