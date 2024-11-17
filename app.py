@@ -104,6 +104,18 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         )
 
 
+async def check(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if "active_jobs" in context.chat_data and context.chat_data["active_jobs"]:
+        active_links = "\n\n".join(context.chat_data["active_jobs"].keys())
+        await update.message.reply_text(
+            f"Links sendo monitorados:\n{active_links}"
+        )
+    else:
+        await update.message.reply_text(
+            "Nenhum link está sendo monitorado no momento."
+        )
+
+
 def main() -> None:
     application = Application.builder().token(config.TOKEN).build()
 
