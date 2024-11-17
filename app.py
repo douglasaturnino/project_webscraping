@@ -73,12 +73,44 @@ async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_text(update.message.text)
 
 
+async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    text = update.message.text.replace("/cancel", "").strip()
+    if (
+        "active_jobs" in context.chat_data
+        and text in context.chat_data["active_jobs"]
+    ):
+        job_name = context.chat_data["active_jobs"][text]
+        job = context.job_queue.get_jobs_by_name(job_name)
+
+        if job:
+            job[0].schedule_removal()
+            del context.chat_data["active_jobs"][text]
+
+            database = Database(config.DATABASE_URL)
+            conn = database.create_connection()
+            database.delete_link(conn, text)
+            conn.close()
+
+            await update.message.reply_text(
+                "Verificação de preços para o link foi cancelada."
+            )
+        else:
+            await update.message.reply_text(
+                f"Não foi encontrada verificação de preços ativa para o link '{text}'."
+            )
+    else:
+        await update.message.reply_text(
+            "Não foi encontrada verificação de preços"
+        )
+
+
 def main() -> None:
     application = Application.builder().token(config.TOKEN).build()
 
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("help", help_command))
     application.add_handler(CommandHandler("link", main2))
+    application.add_handler(CommandHandler("cancel", cancel))
 
     application.add_handler(
         MessageHandler(filters.TEXT & ~filters.COMMAND, echo)
