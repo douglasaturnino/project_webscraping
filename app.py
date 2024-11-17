@@ -1,15 +1,24 @@
 import asyncio
+import logging
+
+from telegram import Update
+from telegram.ext import (
+    Application,
+    CommandHandler,
+    ContextTypes,
+    MessageHandler,
+    filters,
+)
 
 from config import Config as config
 from database import Database
 from scraper import Scraper
-from telegram_bot import TelegramBot
 
 
-async def main():
-    bot = TelegramBot(config.TOKEN, config.CHAT_ID)
+async def main2(update: Update, context: ContextTypes.DEFAULT_TYPE):
     database = Database(config.DATABASE_URL)
-    scraper = Scraper()
+    text = update.message.text.replace("/link", "").strip()
+    scraper = Scraper(text)
 
     conn = database.create_connection()
     database.setup(conn)
@@ -20,23 +29,17 @@ async def main():
             product_info = scraper.parse_page(page_content)
             current_price = product_info["new_price"]
 
-            max_price, max_price_timestamp = database.get_max_price(conn)
+            min_price, min_price_timestamp = database.get_min_price(conn)
 
-            if max_price is None or current_price > max_price:
+            if min_price is None or min_price > current_price:
                 message = f"Novo preço maior detectado: {current_price}"
                 print(message)
-                await bot.send_message(message)
-                max_price = current_price
-                max_price_timestamp = product_info["timestamp"]
-            else:
-                message = f"O maior preço registrado é {max_price} em {max_price_timestamp}"
-                print(message)
-                await bot.send_message(message)
+                await context.send_message(message)
 
             database.save(product_info)
             print("Dados salvos no banco:", product_info)
 
-            await asyncio.sleep(10)
+            await asyncio.sleep(60)
 
     except KeyboardInterrupt:
         print("Parando a execução...")
@@ -44,4 +47,45 @@ async def main():
         conn.close()
 
 
-asyncio.run(main())
+logging.basicConfig(
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    level=logging.INFO,
+)
+logging.getLogger("httpx").setLevel(logging.WARNING)
+
+logger = logging.getLogger(__name__)
+
+
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    user = update.effective_user
+    await update.message.reply_html(
+        rf"Hi {user.first_name}!",
+    )
+
+
+async def help_command(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
+    await update.message.reply_text("Help!")
+
+
+async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    await update.message.reply_text(update.message.text)
+
+
+def main() -> None:
+    application = Application.builder().token(config.TOKEN).build()
+
+    application.add_handler(CommandHandler("start", start))
+    application.add_handler(CommandHandler("help", help_command))
+    application.add_handler(CommandHandler("link", main2))
+
+    application.add_handler(
+        MessageHandler(filters.TEXT & ~filters.COMMAND, echo)
+    )
+
+    application.run_polling(allowed_updates=Update.ALL_TYPES)
+
+
+if __name__ == "__main__":
+    main()

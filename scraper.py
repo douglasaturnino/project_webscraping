@@ -6,9 +6,11 @@ from bs4 import BeautifulSoup
 
 
 class Scraper:
-    @staticmethod
-    def fetch_page() -> str:
-        url = "https://www.mercadolivre.com.br/apple-iphone-16-pro-1-tb-titnio-preto-distribuidor-autorizado/p/MLB1040287851#polycard_client=search-nordic&wid=MLB5054621110&sid=search&searchVariation=MLB1040287851&position=3&search_layout=stack&type=product&tracking_id=98d5335b-6853-403d-9dd6-98374bef3f1b"
+    def __init__(self, url):
+        self.url = url
+
+    def fetch_page(self) -> str:
+        url = self.url
         response = requests.get(url)
         return response.text
 
