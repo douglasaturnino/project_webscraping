@@ -6,12 +6,9 @@ import psycopg2
 import requests
 from bs4 import BeautifulSoup
 from sqlalchemy import create_engine
-from telegram import Bot
 
 from config import Config as config
-
-bot = Bot(token=config.TOKEN)
-
+from telegram_bot import TelegramBot
 
 engine = create_engine(config.DATABASE_URL)
 
@@ -87,11 +84,8 @@ def get_max_price(conn):
     return None, None
 
 
-async def send_telegram_message(text):
-    await bot.send_message(chat_id=config.CHAT_ID, text=text)
-
-
 async def main():
+    bot = TelegramBot(config.TOKEN, config.CHAT_ID)
     conn = create_connection()
     setup_database(conn)
 
@@ -106,13 +100,13 @@ async def main():
             if max_price is None or current_price > max_price:
                 message = f"Novo preço maior detectado: {current_price}"
                 print(message)
-                await send_telegram_message(message)
+                await bot.send_message(message)
                 max_price = current_price
                 max_price_timestamp = product_info["timestamp"]
             else:
                 message = f"O maior preço registrado é {max_price} em {max_price_timestamp}"
                 print(message)
-                await send_telegram_message(message)
+                await bot.send_message(message)
 
             save_to_database(product_info)
             print("Dados salvos no banco:", product_info)
