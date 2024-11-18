@@ -1,12 +1,22 @@
 
 # Monitoramento de Preço com Web Scraping e Notificações no Telegram
 
-Este projeto realiza o monitoramento de preços de produtos em sites de e-commerce. Utilizando técnicas de web scraping, o projeto coleta preços e envia notificações no Telegram quando o valor atinge um limite específico definido pelo usuário. A aplicação é modular, dividida em partes para facilitar o desenvolvimento e a manutenção.
+Este projeto realiza o monitoramento de preços de produtos do mercado livre. Utilizando técnicas de web scraping, o projeto coleta preços e envia notificações no Telegram quando o valor atinge um preço menor que o atual. A aplicação é modular, dividida em partes para facilitar o desenvolvimento e a manutenção.
 
 ## Esse projeto faz parte do workshop de Web Scraping
 
 Assista ao vídeo completo aqui pelo [link](https://youtube.com/live/z1EOlFV8g7g)
 
+## Mode de uso
+Para usar o bot é necessario alguns pesquisar o bot no telegram por [@dsoscanprices_bot](https://t.me/dsoscanprices_bot)
+O bot aceita os comandos listados abaixo:
+
+"<b>/link [URL]</b> - Adicione um link para monitoramento de preços. O bot verificará o preço periodicamente e informará se houver alterações.\n"
+"<b>/cancel [URL]</b> - Cancele o monitoramento de um link específico. Isso interromperá a verificação de preços para o link fornecido.\n"
+"<b>/check</b> - Liste todos os links que estão sendo monitorados atualmente. Use este comando para verificar quais links estão ativos.\n"
+"<b>/help</b> - Obtenha ajuda sobre como usar os comandos e funcionalidades do bot.\n\n"
+
+Quando é enviado alguma mensagem para o bot que não seja algum dos comandos ele funciona como um repedidor de texto.
 
 ## Arquitetura
 
