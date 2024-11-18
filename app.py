@@ -142,26 +142,26 @@ async def check(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 def main() -> None:
     application = Application.builder().token(config.TOKEN).build()
 
+    for chat_data in application.chat_data.values():
+        if "active_jobs" not in chat_data:
+            chat_data["active_jobs"] = {}
+
     database = Database(config.DATABASE_URL)
     conn = database.create_connection()
-    database.setup(conn)
     active_links = database.get_links(conn)
     conn.close()
 
     for link, chat_id in active_links.items():
         job_name = f"check_prices_{link}"
-        if "active_jobs" not in application.chat_data:
-            application.chat_data["active_jobs"] = {}
-            application.chat_data["active_jobs"][link] = job_name
-
         application.job_queue.run_repeating(
             check_prices,
-            interval=300,
+            interval=60,
             first=10,
             data=link,
             chat_id=chat_id,
             name=job_name,
         )
+        application.chat_data[chat_id]["active_jobs"][link] = job_name
 
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("help", help_command))
