@@ -107,8 +107,10 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 async def get_link(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text.replace("/link", "").strip()
     job_name = f"check_prices_{text}"
+
     if "active_jobs" not in context.chat_data:
         context.chat_data["active_jobs"] = {}
+
     context.chat_data["active_jobs"][text] = job_name
 
     database = Database(config.DATABASE_URL)
@@ -118,18 +120,19 @@ async def get_link(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     context.job_queue.run_repeating(
         check_prices,
-        interval=600,
+        interval=60,
         first=10,
         data=text,
         chat_id=update.message.chat_id,
         name=job_name,
     )
+
     await update.message.reply_text("Verificação de preços iniciada.")
 
 
 async def check(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if "active_jobs" in context.chat_data and context.chat_data["active_jobs"]:
-        active_links = "\n\n".join(context.chat_data["active_jobs"].keys())
+        active_links = "\n".join(context.chat_data["active_jobs"].keys())
         await update.message.reply_text(
             f"Links sendo monitorados:\n{active_links}"
         )
@@ -140,12 +143,10 @@ async def check(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 
 def main() -> None:
+    """Start the bot."""
     application = Application.builder().token(config.TOKEN).build()
 
-    for chat_data in application.chat_data.values():
-        if "active_jobs" not in chat_data:
-            chat_data["active_jobs"] = {}
-
+    # Load links from database and add them to job queue
     database = Database(config.DATABASE_URL)
     conn = database.create_connection()
     active_links = database.get_links(conn)
@@ -161,7 +162,12 @@ def main() -> None:
             chat_id=chat_id,
             name=job_name,
         )
+        if "active_jobs" not in application.chat_data[chat_id]:
+            application.chat_data[chat_id]["active_jobs"] = {}
         application.chat_data[chat_id]["active_jobs"][link] = job_name
+        print(
+            f"Link {link} adicionado ao job queue e context.chat_data para chat_id {chat_id}"
+        )
 
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("help", help_command))

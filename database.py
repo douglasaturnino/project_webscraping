@@ -30,7 +30,12 @@ class Database:
             new_price INTEGER,
             installment_price INTEGER,
             timestamp TIMESTAMP
-        )
+        );
+        CREATE TABLE IF NOT EXISTS links (
+            id SERIAL PRIMARY KEY,
+            link TEXT UNIQUE,
+            chat_id BIGINT
+        );
     """)
         conn.commit()
         cursor.close()
@@ -49,3 +54,28 @@ class Database:
         if result and result[0] is not None:
             return result[0], result[1]
         return None, None
+
+    def save_link(self, conn, link: str, chat_id: int) -> None:
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            INSERT INTO links (link, chat_id) VALUES (%s, %s)
+            ON CONFLICT (link) DO NOTHING;
+        """,
+            (link, chat_id),
+        )
+        conn.commit()
+        cursor.close()
+
+    def delete_link(self, conn, link: str) -> None:
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM links WHERE link = %s;", (link,))
+        conn.commit()
+        cursor.close()
+
+    def get_links(self, conn) -> Dict[str, int]:
+        cursor = conn.cursor()
+        cursor.execute("SELECT link, chat_id FROM links;")
+        links = cursor.fetchall()
+        cursor.close()
+        return {link: chat_id for link, chat_id in links}
