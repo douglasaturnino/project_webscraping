@@ -44,10 +44,10 @@ class Database:
         df = pd.DataFrame([data])
         df.to_sql(table_name, self.engine, if_exists="append", index=False)
 
-    def get_max_price(self, conn) -> Tuple[int, str]:
+    def get_min_price(self, conn) -> Tuple[int, str]:
         cursor = conn.cursor()
         cursor.execute(
-            """ SELECT new_price, timestamp FROM prices WHERE new_price = (SELECT MAX(new_price) FROM prices); """
+            """ SELECT new_price, timestamp FROM prices WHERE new_price = (SELECT MIN(new_price) FROM prices); """
         )
         result = cursor.fetchone()
         cursor.close()
