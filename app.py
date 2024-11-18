@@ -112,7 +112,7 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 async def get_link(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text.replace("/link", "").strip()
-    job_name = f"check_prices_{text}"
+    job_name = text
 
     if "active_jobs" not in context.chat_data:
         context.chat_data["active_jobs"] = {}
@@ -157,7 +157,7 @@ def main() -> None:
     conn.close()
 
     for link, chat_id in active_links.items():
-        job_name = f"check_prices_{link}"
+        job_name = link
         application.job_queue.run_repeating(
             check_prices,
             interval=600,
