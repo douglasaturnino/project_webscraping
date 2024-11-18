@@ -75,7 +75,13 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 async def help_command(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> None:
-    await update.message.reply_text("Help!")
+    await update.message.reply_text(
+        "<b>/start</b> - Mensagem de boas vindas.\n"
+        "<b>/link [URL]</b> - Adicione um link para monitoramento de preços. O bot verificará o preço periodicamente e informará se houver alterações.\n"
+        "<b>/cancel [URL]</b> - Cancele o monitoramento de um link específico. Isso interromperá a verificação de preços para o link fornecido.\n"
+        "<b>/check</b> - Liste todos os links que estão sendo monitorados atualmente. Use este comando para verificar quais links estão ativos.\n"
+        "<b>/help</b> - Obtenha ajuda sobre como usar os comandos e funcionalidades do bot.\n\n"
+    )
 
 
 async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
