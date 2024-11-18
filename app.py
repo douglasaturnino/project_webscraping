@@ -37,13 +37,14 @@ async def check_prices(context: ContextTypes.DEFAULT_TYPE):
         logger.info("Dados salvos no banco:", product_info)
 
     except Exception as e:
-        print(f"Erro: {e}")
-        await context.bot.send_message(
-            chat_id=context.job.chat_id,
-            text="Ocorreu um erro ao processar a verificação de preços. O trabalho será cancelado.",
-        )
+        logger.error(f"Erro: {e}")
         current_job = context.job
         current_job.schedule_removal()
+        database.delete_link(conn, context.job.data)
+        await context.bot.send_message(
+            chat_id=context.job.chat_id,
+            text=f"Ocorreu um erro ao processar a verificação de preços para o link {context.job.data}. O trabalho será cancelado.",
+        )
     finally:
         conn.close()
 
