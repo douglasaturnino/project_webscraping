@@ -20,12 +20,24 @@ class Scraper:
         product_name = soup.find("h1", class_="ui-pdp-title").get_text(
             strip=True
         )
-        prices = soup.find_all("span", class_="andes-money-amount__fraction")
-        old_price = int(prices[0].get_text(strip=True).replace(".", ""))
-        new_price = int(prices[1].get_text(strip=True).replace(".", ""))
-        installment_price = int(
-            prices[2].get_text(strip=True).replace(".", "")
+        price_elements = soup.find_all(
+            "span",
+            class_="andes-money-amount ui-pdp-price__part andes-money-amount--cents-superscript andes-money-amount--compact",
         )
+
+        prices = []
+        for element in price_elements:
+            fraction = element.find(
+                "span", class_="andes-money-amount__fraction"
+            )
+            if fraction:
+                prices.append(fraction.text)
+
+        new_price = int(prices[0].replace(".", ""))
+        if len(prices) > 1:
+            installment_price = int(prices[1].replace(".", ""))
+        if len(prices) > 2:
+            old_price = int(prices[2].replace(".", ""))
         timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
         return {
             "product_name": product_name,
