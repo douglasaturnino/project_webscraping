@@ -1,4 +1,3 @@
-import asyncio
 import logging
 
 from telegram import Update
@@ -42,7 +41,7 @@ async def check_prices(context: ContextTypes.DEFAULT_TYPE):
         await context.bot.send_message(
             chat_id=context.job.chat_id,
             text="Ocorreu um erro ao processar a verificação de preços. O trabalho será cancelado.",
-        )  # Cancela o trabalho em caso de erro
+        )
         current_job = context.job
         current_job.schedule_removal()
     finally:
@@ -62,7 +61,13 @@ logger = logging.getLogger(__name__)
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user = update.effective_user
     await update.message.reply_html(
-        rf"Hi {user.first_name}!",
+        rf"Olá {user.first_name}!"
+        "\nBem-vindo ao bot de verificação de preços! Aqui está como você pode usar os comandos disponíveis:\n\n"
+        "<b>/link [URL]</b> - Adicione um link para monitoramento de preços. O bot verificará o preço periodicamente e informará se houver alterações.\n"
+        "<b>/cancel [URL]</b> - Cancele o monitoramento de um link específico. Isso interromperá a verificação de preços para o link fornecido.\n"
+        "<b>/check</b> - Liste todos os links que estão sendo monitorados atualmente. Use este comando para verificar quais links estão ativos.\n"
+        "<b>/help</b> - Obtenha ajuda sobre como usar os comandos e funcionalidades do bot.\n\n"
+        "Sinta-se à vontade para testar os comandos e monitorar os preços dos produtos do mercado livre que você deseja acompanhar. Estou aqui para ajudar!"
     )
 
 
@@ -87,15 +92,16 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
         if job:
             job[0].schedule_removal()
-            await update.message.reply_text(
-                "Verificação de preços para o link foi cancelada."
-            )
             del context.chat_data["active_jobs"][text]
 
             database = Database(config.DATABASE_URL)
             conn = database.create_connection()
             database.delete_link(conn, text)
             conn.close()
+
+            await update.message.reply_text(
+                "Verificação de preços para o link foi cancelada."
+            )
         else:
             await update.message.reply_text(
                 f"Não foi encontrada verificação de preços ativa para o link '{text}'."
@@ -120,7 +126,7 @@ async def get_link(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     context.job_queue.run_repeating(
         check_prices,
-        interval=60,
+        interval=600,
         first=10,
         data=text,
         chat_id=update.message.chat_id,
@@ -132,7 +138,7 @@ async def get_link(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def check(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if "active_jobs" in context.chat_data and context.chat_data["active_jobs"]:
-        active_links = "\n".join(context.chat_data["active_jobs"].keys())
+        active_links = "\n\n".join(context.chat_data["active_jobs"].keys())
         await update.message.reply_text(
             f"Links sendo monitorados:\n{active_links}"
         )
@@ -143,10 +149,8 @@ async def check(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 
 def main() -> None:
-    """Start the bot."""
     application = Application.builder().token(config.TOKEN).build()
 
-    # Load links from database and add them to job queue
     database = Database(config.DATABASE_URL)
     conn = database.create_connection()
     active_links = database.get_links(conn)
@@ -156,7 +160,7 @@ def main() -> None:
         job_name = f"check_prices_{link}"
         application.job_queue.run_repeating(
             check_prices,
-            interval=60,
+            interval=600,
             first=10,
             data=link,
             chat_id=chat_id,
@@ -165,9 +169,6 @@ def main() -> None:
         if "active_jobs" not in application.chat_data[chat_id]:
             application.chat_data[chat_id]["active_jobs"] = {}
         application.chat_data[chat_id]["active_jobs"][link] = job_name
-        print(
-            f"Link {link} adicionado ao job queue e context.chat_data para chat_id {chat_id}"
-        )
 
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("help", help_command))
