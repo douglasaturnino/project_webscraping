@@ -1,5 +1,6 @@
 import logging
 
+from flask import Flask
 from telegram import Update
 from telegram.ext import (
     Application,
@@ -12,6 +13,8 @@ from telegram.ext import (
 from config import Config as config
 from database import Database
 from scraper import Scraper
+
+app = Flask(__name__)
 
 
 async def check_prices(context: ContextTypes.DEFAULT_TYPE):
@@ -187,7 +190,13 @@ def main() -> None:
         MessageHandler(filters.TEXT & ~filters.COMMAND, echo)
     )
 
+    @app.route("/")
+    def index():
+        return "App está rodando!"
+
     application.run_polling(allowed_updates=Update.ALL_TYPES)
+
+    app.run(host="0.0.0.0", port=5000)
 
 
 if __name__ == "__main__":
