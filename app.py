@@ -20,7 +20,6 @@ async def check_prices(context: ContextTypes.DEFAULT_TYPE):
     scraper = Scraper(context.job.data)
 
     conn = database.create_connection()
-    database.setup(conn)
 
     try:
         page_content = scraper.fetch_page()
@@ -97,10 +96,6 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             conn = database.create_connection()
             database.delete_link(conn, text)
             conn.close()
-
-            await update.message.reply_text(
-                "Verificação de preços para o link foi cancelada."
-            )
         else:
             await update.message.reply_text(
                 f"Não foi encontrada verificação de preços ativa para o link '{text}'."
@@ -149,12 +144,16 @@ def main() -> None:
 
     database = Database(config.DATABASE_URL)
     conn = database.create_connection()
-    database.setup()
+    database.setup(conn)
     active_links = database.get_links(conn)
     conn.close()
 
     for link, chat_id in active_links.items():
         job_name = f"check_prices_{link}"
+        if "active_jobs" not in application.chat_data:
+            application.chat_data["active_jobs"] = {}
+            application.chat_data["active_jobs"][link] = job_name
+
         application.job_queue.run_repeating(
             check_prices,
             interval=300,
