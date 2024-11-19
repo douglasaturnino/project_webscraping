@@ -67,10 +67,11 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_html(
         rf"Olá {user.first_name}!"
         "\nBem-vindo ao bot de verificação de preços! Aqui está como você pode usar os comandos disponíveis:\n\n"
-        "<b>/link [URL]</b> - Adicione um link para monitoramento de preços. O bot verificará o preço periodicamente e informará se houver alterações.\n"
-        "<b>/cancel [URL]</b> - Cancele o monitoramento de um link específico. Isso interromperá a verificação de preços para o link fornecido.\n"
-        "<b>/check</b> - Liste todos os links que estão sendo monitorados atualmente. Use este comando para verificar quais links estão ativos.\n"
-        "<b>/help</b> - Obtenha ajuda sobre como usar os comandos e funcionalidades do bot.\n\n"
+        "/start - Mensagem de boas vindas.\n"
+        "/link [URL] - Adicione um link para monitoramento de preços. O bot verificará o preço periodicamente e informará se houver alterações.\n"
+        "/cancel [URL] - Cancele o monitoramento de um link específico. Isso interromperá a verificação de preços para o link fornecido.\n"
+        "/check - Liste todos os links que estão sendo monitorados atualmente. Use este comando para verificar quais links estão ativos.\n"
+        "/help - Obtenha ajuda sobre como usar os comandos e funcionalidades do bot.\n\n"
         "Exemplo:\n"
         "/link https://www.mercadolivre.com.br/parafusadeira-furadeira-de-impacto-profissional-21v-modelo-tb-21px-2-baterias-com-maleta-tb21px-the-black-tools/p/MLB30144703\n\n"
         "Sinta-se à vontade para testar os comandos e monitorar os preços dos produtos do mercado livre que você deseja acompanhar. Estou aqui para ajudar!"
@@ -81,11 +82,13 @@ async def help_command(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> None:
     await update.message.reply_text(
-        "<b>/start</b> - Mensagem de boas vindas.\n"
-        "<b>/link [URL]</b> - Adicione um link para monitoramento de preços. O bot verificará o preço periodicamente e informará se houver alterações.\n"
-        "<b>/cancel [URL]</b> - Cancele o monitoramento de um link específico. Isso interromperá a verificação de preços para o link fornecido.\n"
-        "<b>/check</b> - Liste todos os links que estão sendo monitorados atualmente. Use este comando para verificar quais links estão ativos.\n"
-        "<b>/help</b> - Obtenha ajuda sobre como usar os comandos e funcionalidades do bot.\n\n"
+        "/start - Mensagem de boas vindas.\n"
+        "/link [URL] - Adicione um link para monitoramento de preços. O bot verificará o preço periodicamente e informará se houver alterações.\n"
+        "/cancel [URL] - Cancele o monitoramento de um link específico. Isso interromperá a verificação de preços para o link fornecido.\n"
+        "/check - Liste todos os links que estão sendo monitorados atualmente. Use este comando para verificar quais links estão ativos.\n"
+        "/help - Obtenha ajuda sobre como usar os comandos e funcionalidades do bot.\n\n"
+        "Exemplo:\n"
+        "/link https://www.mercadolivre.com.br/parafusadeira-furadeira-de-impacto-profissional-21v-modelo-tb-21px-2-baterias-com-maleta-tb21px-the-black-tools/p/MLB30144703\n\n"
     )
 
 
