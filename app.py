@@ -71,6 +71,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         "<b>/cancel [URL]</b> - Cancele o monitoramento de um link específico. Isso interromperá a verificação de preços para o link fornecido.\n"
         "<b>/check</b> - Liste todos os links que estão sendo monitorados atualmente. Use este comando para verificar quais links estão ativos.\n"
         "<b>/help</b> - Obtenha ajuda sobre como usar os comandos e funcionalidades do bot.\n\n"
+        "Exemplo:\n"
+        "/link https://www.mercadolivre.com.br/parafusadeira-furadeira-de-impacto-profissional-21v-modelo-tb-21px-2-baterias-com-maleta-tb21px-the-black-tools/p/MLB30144703\n\n"
         "Sinta-se à vontade para testar os comandos e monitorar os preços dos produtos do mercado livre que você deseja acompanhar. Estou aqui para ajudar!"
     )
 
